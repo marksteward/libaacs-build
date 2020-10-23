@@ -27,3 +27,24 @@ jobs:
           name: artifacts-win64
           path: |
             libaacs/build/artifacts/usr/local/bin
+
+  libaacs-win32:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: docker pull registry.videolan.org:5000/vlc-debian-win32:20181107151708
+      - run: docker pull mikefarah/yq
+      - run: git clone https://code.videolan.org/videolan/libaacs.git
+      - name: Create build script from CI job
+        run: |
+          curl -s https://code.videolan.org/videolan/libaacs/-/raw/master/.gitlab-ci.yml \
+            | docker run --rm -i mikefarah/yq yq r -j - build-win32.script \
+            | jq -r .[] > build-win32.sh
+      - name: Run build script in docker 
+        run: docker run --rm -v $PWD:/build -w /build/libaacs registry.videolan.org:5000/vlc-debian-win32:20181107151708 bash ../build-win32.sh
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts-win32
+          path: |
+            libaacs/build/artifacts/usr/local/bin
